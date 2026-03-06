@@ -1,0 +1,694 @@
+<!doctype html>
+<title>FRATELLI</title>
+<link rel="stylesheet" href="Lyrica.css">
+
+<div id="stage">
+  <h1>FRATELLI</h1>
+  <img src="" width="300" height="267">
+  <p id="output"></p>
+  <p id="inventoryOutput">Motxilla: Buida</p>
+  <p id="moneyOutput">Diners: 0 €</p>
+  <p id="rangOutput">Rang: Missatger</p>
+  <p id="puntOutput">Puntuacio: 0</p>
+  <input id="input" type="text" placeholder="Introduïu l'acció..."> 
+  <button>Enter</button>
+</div>
+
+<script>
+var map = [];
+map[0] = "Commissario";
+map[1] = "Angolo della Fortuna";
+map[2] = "Molo nord";
+map[3] = "Deposito Centrale";
+map[4] = "Retro del Teatro";
+map[5] = "Viale del Federale";
+map[6] = "Club Nota Blu";
+map[7] = "Vecchia Chiesa";
+map[8] = "Pizzeria del fratelli De Santis";
+map[9] = "Banca Nascosta";
+map[10] = "Via dei Confidenti"
+map[11] = "Angolo di Ciccio"
+map[12] = "Speakeasy Maiale"
+map[13] = "Ufficio Legale Falso"
+map[14] = "Viale del Lucro"
+map[15] = "Via del Silenzio"
+map[16] = "Incrocio Clan"
+map[17] = "Passaggio Morgue"
+map[18] = "Fabbrica Proibita"
+map[19] = "Cantina Sociale"
+map[20] = "Pizzeria Rossi"
+map[21] = "Cimitero Abbandonato"
+map[22] = "Molo sud"
+map[23] = "Ponte della Baia"
+map[24] = "Isola del Padrino"
+
+var images = [];
+images[0] = "Commissario.png";
+images[1] = "Angolo_della_Fortuna.png";
+images[2] = "Molo_nord.png";
+images[3] = "Deposito_Centrale.png"
+images[4] = "Retro_del_Teatro.png";
+images[5] = "Viale_del_Federale.png";
+images[6] = "Club_Nota_Blu.png";
+images[7] = "Vecchia_Chiesa.png";
+images[8] = "Pizzeria_del_fratelli_De_Santis.png";
+images[9] = "banca_nascosta.png"
+images[10] = "Via_dei_Confidenti.png"
+images[11] = "Angolo_di_Ciccio.png"
+images[12] = "inici.png"
+images[13] = "Ufficio_Legale_Falso.png"
+images[14] = "Viale_del_Lucro.png"
+images[15] = "Via_del_Silenzio.png"
+images[16] = "Incrocio_Clan.png"
+images[17] = "passaggio_morgue.png"
+images[18] = "Fabbrica_Proibita.png"
+images[19] = "Cantina_Sociale.png"
+images[20] = "Pizzeria_Rossi.png"
+images[21] = "Cimitero_Abbandonato.png"
+images[22] = "Molo_sud.png"
+images[23] = "Ponte_della_Baia.png"
+images[24] = "Isola_del_Padrino.png"
+
+/*var mapDescription = []
+
+*/
+
+//Funcio NO PASAR COPS 2 PER LA CASELLA 24
+
+var pasar = 0;
+var JefMort = false;
+var jaVisitat24 = false;
+var JocAcabat = false
+
+//Experiencia
+var puntuacio = 0
+var rang = "Missatger"
+
+function ARang(){
+    if (puntuacio <= 3){
+        rang = "Missatger";
+    } else if (puntuacio <= 7){
+        rang = "Soldat";
+    } else if (puntuacio <= 12){
+        rang = "Mà Dreta"; 
+    } else {
+        rang = "Capo";
+    }
+}
+
+//Funcio del Nom
+var nom = prompt("Introdueix el nom per el que vulguis que et diguin");
+if (nom === null || nom === "") {
+    nom = "Mario";
+}
+
+// Inventari i diners
+var items = [];
+var itemLocations = [];
+var itemsIknow = ["diners", "paquet", "pistola", "subfucil", "nota", "cos"];
+var playerMoney = 0;
+var backpack = [];
+
+var ini = false
+
+function inici(){
+  if(mapLocation === 12 && ini === false){
+      gameMessage = "Escolta'm bé, " + nom + ". Has entrat a la família De Santis, i aquí la lleialtat es paga amb sang o amb or.";
+      gameMessage += "Pots moure't (adalt, dreta, abaix, esquerra) o interactuar: agafar, deixar, utilitzar, parla, tenda, comprar, llegir, jugar i mapa.";
+      gameMessage += "Si et sents perdut, escriu 'ajuda'. Ara, mou el cul i parla amb el veterà que tens al davant.";
+      ini = true
+    } 
+}
+
+
+// Posició inicial
+var mapLocation = 12;
+
+
+
+//Initialize the player's input
+var playersInput = "";
+
+//Initialize the game message
+var gameMessage = "";
+
+//Actions the game understands
+var actionsIKnow = ["adalt", "dreta", "abaix", "esquerra", "agafar", "utilitzar", "deixar", "ajuda", "parla", "tenda", "comprar", "llegir", "jugar", "mapa"];
+var action ="";
+
+// Accions i interfície
+var output = document.querySelector("#output");
+var input = document.querySelector("#input");
+var button = document.querySelector("button");
+var image = document.querySelector("img");
+var inventoryOutput = document.querySelector("#inventoryOutput");
+var moneyOutput = document.querySelector("#moneyOutput");
+var rangOutput = document.querySelector("#rangOutput");
+var puntOutput = document.querySelector("#puntOutput")
+
+button.style.cursor = "pointer";
+button.addEventListener("click", clickHandler, false);
+window.addEventListener("keydown", keydownHandler, false);
+
+function keydownHandler(event) {
+  if (event.key === "Enter") {
+    playGame();
+    button.style.backgroundColor = "lightgrey";
+    setTimeout(function() {
+      button.style.backgroundColor = ""; 
+    }, 100);
+  }
+}
+//Display the player's location
+output.innerHTML = map[mapLocation];
+
+render();
+
+
+//FUNCIONS FETAS PER MI
+
+
+// ESTATS GLOBALS 
+var parlaFeta = false;
+var PizParla = false;
+var mostrandoMapa = false;
+
+console.log(NumAlet())
+
+
+//Casino
+function NumAlet(){
+  var resultat = Math.floor(Math.random() * 6) + 1;
+  return resultat;
+}
+
+
+function casino() {
+  if (playerMoney <= 0) {
+    gameMessage = "No tens diners per apostar.";
+    return;
+  }
+
+  if (mapLocation === 1) {
+    var CalNumero = NumAlet();
+    if (CalNumero >= 5) {
+      gameMessage = "Has guanyat! El número és " + CalNumero;
+      playerMoney += 5;
+    } else {
+      gameMessage = "Has perdut! El número és " + CalNumero;
+      playerMoney -= 5;
+    }
+  } else {
+    gameMessage = "Aquí no es pot apostar.";
+  }
+}
+
+//Parla
+function parla(){
+if (parlaFeta === true && !backpack.includes("pistola")) {
+    gameMessage = "T'havia advertit que no em fessis perdre el temps, " + nom + "... Als De Santis no els agraden els inútils. Sents un clic metàl·lic i, de cop, tot es torna negre. HAS MORT.";    
+    button.removeEventListener("click", clickHandler);
+    window.removeEventListener("keydown", keydownHandler, false);
+    input.disabled = true;
+    JocAcabat = true;
+    image.src = "../images/fi.jpg"; // Asegúrate de que la ruta sea correcta
+    render();
+    return;
+  }
+
+  if(mapLocation === 12){
+    if (items.indexOf("nota") === -1 && backpack.indexOf("nota") === -1) {
+      items.push("nota"); 
+      itemLocations.push(12);
+    }
+      gameMessage = "Benvingut al negoci, " + nom + ". Agafa aquesta nota, però ni se t'acudeixi llegir-la si valores la teva pell. Ves a la 'Banca Nascosta', ells et diran què fer.";        
+    }
+    else if (mapLocation === 8){
+      if(backpack.includes("pistola")){
+        gameMessage = "Molt bé, " + nom + ". Els Rossi es creuen intocables i no volen pagar la protecció. Ves a la 'Pizzeria Rossi' i buida'ls la caixa. Sigues ràpid i no deixis testimonis. Després, porta el botí al 'Molo Nord'.";      
+        PizParla = true;
+      }
+      else{
+          gameMessage = "Què carai fas aquí amb les mans buides, " + nom + "? Això no és un joc de nens. Compra una pistola al mercat negre o el pròxim tret te'l clavaré jo entre els ulls.";             
+          parlaFeta = true;
+      }  
+      }
+  else{
+     gameMessage = "Aquí no hi ha ningú que vulgui parlar amb un tipus com tu, " + nom + ".";      
+    }
+}
+
+function ajuda(){
+  gameMessage += "No t'atabalis, " + nom + ". Les ordres són simples: moure't (direccions), interactuar (agafar, deixar, utilitzar, parla, llegir), fer negocis (tenda, comprar, jugar) o orientar-te (mapa)."
+}
+
+
+// Funció de la tenda
+var shopItems = {
+  "pistola": 50,
+  "subfucil": 100,
+};
+
+
+function shopList() {
+  if (mapLocation === 17) {
+    gameMessage = "Apropa't, " + nom + ". Aquí tens tot el que m'ha arribat del moll. <br><strong>Llista de preus:</strong><br>";
+    for (var product in shopItems) {
+      gameMessage += product + ": " + shopItems[product] + "€<br>";
+    }
+  } else {
+    gameMessage = "Aquí no hi ha ningú venent res, " + nom + ". Només rates i silenci.";
+  }
+}
+
+function buyItem(item) {
+  if (mapLocation !== 17) {
+    gameMessage = "Aquí no hi ha mercat negre, " + nom + ". No intentis comprar res al mig del carrer.";
+    return;
+  }
+
+  if (!item) {
+    gameMessage = "A veure, " + nom + ", digues què vols. No tinc tot el dia per esperar que et decideixis.";
+    return;
+  }
+
+  if (shopItems[item] === undefined) {
+    gameMessage = "No fotis, " + nom + ". No venem '" + item + "' aquí. Mira bé la llista de preus.";
+    return;
+  }
+
+  if (backpack.indexOf(item) !== -1) {
+    gameMessage = "Per què vols un altre " + item + "? Ja en portes un a la motxilla, " + nom + ".";
+    return;
+  }
+
+  var price = shopItems[item];
+
+  if (playerMoney >= price) {
+    playerMoney -= price;
+    backpack.push(item);
+    gameMessage = "Tracte fet, " + nom + ". Aquí tens el teu/teva " + item + ". No em diguis per a què el vols, millor no saber-ho.";
+  } else {
+    gameMessage = "Això no és una ONG, " + nom + ". costa " + price + " € i tu només en tens " + playerMoney + " €. Torna quan tinguis calés.";
+  }
+}
+
+//Llegir
+
+function llegir() {
+  if (backpack.includes("nota")) {
+    gameMessage = "T'havien donat una sola ordre, " + nom + ": no llegir la nota. La curiositat ha matat el gat... i a tu també. La màfia no deixa caps lligats. HAS MORT.";
+    button.removeEventListener("click", clickHandler);
+    window.removeEventListener("keydown", keydownHandler, false);
+    input.disabled = true;
+    JocAcabat = true;
+    image.src = "../images/fi.jpg"
+  } else {
+    gameMessage = "No tens cap nota per llegir, " + nom + ". No t'inventis coses.";
+  }
+}
+
+
+function mapa(){
+  mostrandoMapa = true;
+  image.src = "../images/mapa.png";
+  gameMessage = "Estàs consultant el mapa de la ciutat, " + nom + ". Fes qualsevol moviment o acció per guardar-lo i tornar al carrer."
+}
+
+//Codi Joc
+
+function clickHandler()
+{
+  playGame();
+}
+
+function playGame()
+{
+  //Get the player's input and convert to lowercase
+  playersInput = input.value;
+  playersInput = playersInput.toLowerCase();
+
+  //Reset the variables 
+  gameMessage = "";
+  action = "";
+  item = "";
+  //Cal posar ITEM = "" també ?????
+  //Figure out the player's action
+
+  for(i=0; i < actionsIKnow.length; i++)
+  {
+    if(playersInput.indexOf(actionsIKnow[i]) !== -1)
+    {
+        action = actionsIKnow[i];
+        break;
+    }
+  }
+
+  for(i=0; i <itemsIknow.length; i++) 
+  {
+    if(playersInput.indexOf(itemsIknow[i]) !== -1)
+    {
+        item = itemsIknow[i];
+        break;
+    }
+  }
+
+  switch(action)
+  {
+    case "adalt":
+      if (mapLocation >= 5)
+      {
+          mapLocation -= 5;
+      }
+      else
+      {
+      gameMessage = "Al nord no hi ha res per a tu, " + nom + ". No surtis del territori de la família.";
+      }
+      break;
+    case "dreta":
+      if (mapLocation % 5 != 4)
+      {
+        mapLocation += 1;
+      }
+      else
+      {
+        gameMessage = "Si segueixes cap a l'est acabarem a l'oceà, " + nom + ". Millor fem mitja volta.";
+      }
+      break;
+    case "esquerra":
+      if (mapLocation % 5 != 0)
+      {
+        mapLocation -= 1; //mapLocation = mapLocation - 1;
+      }
+      else
+      {
+        gameMessage = "L'oest està vigilat per una banda rival, " + nom + ". No busquis problemes innecessaris.";
+      }
+      break;
+    case "abaix":
+      if (mapLocation <= 19)
+      {
+          mapLocation += 5;
+      }
+      else
+      {
+        gameMessage = "Aquesta zona del sud és massa perillosa fins i tot per a un De Santis com tu, " + nom + ".";
+      }
+      break;
+
+    case "agafar":
+      takeItem();
+      break;
+
+    case "deixar":
+      dropItem();
+      break;
+    
+    case "utilitzar":
+      useItem();
+      break;
+      
+    case "ajuda":
+      ajuda();
+    break;
+
+    case "parla":
+      parla()
+    break;
+    
+    case "tenda":
+      shopList();
+    break;
+
+    case "comprar":
+      buyItem(item);
+    break;
+
+    case "llegir":
+      llegir();
+    break;
+
+    case "jugar":
+    casino()
+      break;
+
+    case "mapa":
+      mapa()
+    break;
+
+  default:
+      gameMessage = "No t'entenc, " + nom + ". Prova a ficar una acció que tingui sentit.";
+  }
+
+  //Inici de JOC
+  inici();
+  if(mapLocation === 24 && JefMort === false){
+    pasar++;
+    jaVisitat24 = true;
+    if(pasar === 1){
+        gameMessage = "Què carai fas aquí, " + nom + "? El Padrí no t'ha cridat. Fot el camp ara mateix o la pròxima vegada t'executarem sense avisar.";
+    } else if(pasar >= 2){
+        if(!backpack.includes("subfucil")){
+            gameMessage = "T'havíem avisat, " + nom + ". Has tornat a entrar sense permís i sense estar preparat. El Padrí et mira amb menyspreu mentre els seus homes et buiden el carregador. HAS MORT.";
+            button.removeEventListener("click", clickHandler);
+            window.removeEventListener("keydown", keydownHandler, false);
+            input.disabled = true;
+            JocAcabat = true;
+            image.src = "../images/fi.jpg"
+        }
+    }
+}else {
+    jaVisitat24 = false;
+}
+  //¡Renderitzar el JOC
+  render();
+}
+
+
+function takeItem(){
+  var itemIndexNumber = items.indexOf(item);
+
+  if (itemIndexNumber !== -1 && itemLocations[itemIndexNumber] === mapLocation)
+  {
+      backpack.push(item);
+      //Remove the item from the game world
+      items.splice(itemIndexNumber, 1);
+      itemLocations.splice(itemIndexNumber,1);
+
+      //Display in the console for testing
+      console.log("world Items : " + items);
+      console.log("backpack items : " + backpack);
+  }else
+  {
+      gameMessage = "No veig cap '" + item + "' per aquí, " + nom + ". Estàs segur que no veus visions?";
+  }
+}
+
+function dropItem(){
+  var backpackIndexNumber = backpack.indexOf(item);
+
+  if(backpack.length !== 0)
+  {
+    if(backpackIndexNumber !== -1) {
+      items.push(backpack[backpackIndexNumber]);
+      itemLocations.push(mapLocation);
+
+      backpack.splice(backpackIndexNumber, 1);
+
+      //Only for testing purposes
+      console.log("world Items : " + items);
+      console.log("backpack items : " + backpack);
+    }
+    else
+    {
+        gameMessage = "No pots deixar una cosa que no portes a sobre, " + nom + ".";
+    }
+  }
+  else{
+    gameMessage = ("La teva motxilla està buida, " + nom + ". No tens res per deixar.");
+  }
+}
+
+function useItem(){
+  var backpackIndexNumber = backpack.indexOf(item);
+
+  if(backpackIndexNumber === -1)
+  {
+    gameMessage = "No portes cap '" + item + "' a sobre, " + nom + "."
+  }
+  else {
+    switch(item)
+    {
+
+      case "cos":
+        if(mapLocation === 23)
+        {
+          gameMessage = "Has llançat el cos pel pont i ha desaparegut sota les aigües tèrboles, " + nom + ". La policia no trobarà mai el cadàver."
+        playerMoney += 200;
+        puntuacio += 4;
+        ARang();
+        // Quitar de la mochila
+        backpack.splice(backpackIndexNumber, 1);
+
+        // Finalizar el juego
+        button.removeEventListener("click", clickHandler);
+        window.removeEventListener('keydown', keydownHandler, false);
+        input.disabled = true;
+        JocAcabat = true;
+        image.src = "../images/fiv.jpg"
+
+        }
+        else
+        {
+          gameMessage = "No ha estat gens bona idea intentar amagar un cos aquí, " + nom + ". Un testimoni t'ha vist i ha trucat a la policia. Estàs detingut i la teva carrera a la màfia s'ha acabat.";
+          backpack.splice(backpackIndexNumber, 1);
+          button.removeEventListener("click", clickHandler);
+          window.removeEventListener('keydown', keydownHandler, false);
+          input.disabled = true;
+          JocAcabat = true;
+          image.src = "../images/fi.jpg"
+        }
+      break;
+
+      case "paquet":
+      if (mapLocation === 3)
+      {
+      gameMessage = "Has entregat el paquet a l'home de l'abric. 'Bon treball, " + nom + ". Per a la pròxima missió necessitaràs foc real; et recomano anar a Passaggio Morgue per armar-te. Quan estiguis llest, vine a la Pizzeria dels Fratelli De Santis'.";
+      backpack.splice(backpackIndexNumber, 1);
+      playerMoney += 20;
+      puntuacio += 2
+      ARang();
+      }
+      else{
+        gameMessage = "No és el moment ni el lloc per treure el paquet, " + nom + ". Vols que algun tafaner ens vegi i ens enviï directes a la presó?"
+      }
+      break;
+
+      case "nota":
+        if(mapLocation === 9)
+        {
+          gameMessage = "El banquer llegeix la nota amb la cara pàl·lida i et dóna un paquet pesant. 'Porta això al Deposito Centrale, " + nom + ". Hi trobaràs un home amb un abric negre. No facis preguntes i, sobretot, no miris enrere'.";
+          backpack.splice(backpackIndexNumber, 1);
+          playerMoney += 30;
+          puntuacio += 2
+          ARang();
+          backpack.push("paquet");
+        }
+        else
+        {
+           gameMessage = "No serveix de res ensenyar aquesta nota aquí, " + nom + ". Ves a la Banca Nascosta tal com t'han ordenat.";
+        }
+      break;
+
+      case "pistola":
+        if (PizParla === true){
+            if(mapLocation === 20)
+            {
+              gameMessage = "diners aconseguits";
+              backpack.push("diners");
+              playerMoney += 50;
+              puntuacio += 2
+              ARang();
+            }
+          }
+
+          else{
+          if(mapLocation === 24)
+            {
+              gameMessage = "Com volias fer servir un pitola estaba clar que et mataria.";
+              button.removeEventListener("click", clickHandler);
+              window.removeEventListener('keydown', keydownHandler, false);
+              input.disabled = true;
+              JocAcabat = true;
+              image.src = "../images/fi.jpg"
+            }
+
+            else if(mapLocation === 8)
+            {
+              gameMessage = "Com volias fer servir un pitola estaba clar que et matarian.";
+              button.removeEventListener("click", clickHandler);
+              window.removeEventListener('keydown', keydownHandler, false);
+              input.disabled = true;
+              JocAcabat = true;
+              image.src = "../images/fi.jpg"
+            }
+          else{
+            gameMessage = "No pots fer servir aqui la arma"
+          }
+      }
+      break;
+        
+      case "diners":
+        if(mapLocation === 2)
+        {
+          gameMessage = "He escoltat que el jefe es vol defer de tu jo et recomanaria matrlo si vols seguir amb vida";          
+          backpack.splice(backpackIndexNumber, 1);
+
+          playerMoney += 50;
+          puntuacio += 2
+          ARang();
+        }
+        else
+        {
+           gameMessage = "Aqui no tens que entragar res";
+           //Ficar temporitzador
+        }
+      break;
+
+    case "subfucil":
+      if(mapLocation === 24) {
+        gameMessage = "Has matat el Padrí, ara tira el cos pel pont";
+          if (items.indexOf("cos") === -1 && backpack.indexOf("cos") === -1) {
+            items.push("cos"); 
+            JefMort = true
+            itemLocations.push(24);
+            puntuacio +=2
+            ARang();
+          }
+        }
+          else if(mapLocation === 8){
+            gameMessage = "Com volies fer servir una pistola estava clar que et matarien.";
+            button.removeEventListener("click", clickHandler);
+            window.removeEventListener('keydown', keydownHandler, false);
+            input.disabled = true;
+            JocAcabat = true;
+            image.src = "../images/fi.jpg"
+          }
+      else{
+        gameMessage = "No pots fer servir aquí l'arma";
+      }
+
+    break;
+    }
+  }
+} 
+function render()
+{
+  inici();
+
+  output.innerHTML = map[mapLocation];
+  for (var i=0; i < itemLocations.length; i++)
+  {
+    if (mapLocation === itemLocations[i])
+    {
+      output.innerHTML += "<br>trobas <strong>" + items[i] + "</strong> aqie.";
+    }
+  }
+  if (mostrandoMapa) {
+    image.src = "../images/mapa.png";
+    mostrandoMapa = false;
+  } else if (!JocAcabat){
+    image.src = "../images/" + images[mapLocation];
+  }
+  moneyOutput.innerHTML = "Diners: " + playerMoney + " €";
+  rangOutput.innerHTML = "Rang: " + rang;
+  puntOutput.innerHTML = "XP: " + puntuacio;
+
+  output.innerHTML += "<br><em>" + gameMessage + "</em>";
+  if (backpack.length !== 0) {
+    inventoryOutput.innerHTML = "Motxilla: " + backpack.join(", ");
+  } else {
+    inventoryOutput.innerHTML = "Motxilla: Buida";
+  }
+}
+</script>
